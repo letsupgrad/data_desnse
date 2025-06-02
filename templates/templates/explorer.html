@@ -1,0 +1,80 @@
+
+
+
+{% extends "base.html" %}
+
+{% block title %}Database Explorer - DataSense Analytics{% endblock %}
+
+{% block content %}
+<h1 class="main-header">Database Explorer</h1>
+
+<div class="subsection">
+    {% if not tables %}
+        <div class="info-box">No tables found or database connection issue.</div>
+    {% else %}
+        <form method="post">
+            <div class="flex-container">
+                <div class="flex-item">
+                    <div class="form-group">
+                         <label for="selected_table">Select a table to explore</label>
+                         <select name="selected_table" id="selected_table" class="form-control">
+                             {% for table in tables %}
+                                 <option value="{{ table }}" {% if table == current_table %}selected{% endif %}>{{ table }}</option>
+                             {% endfor %}
+                         </select>
+                    </div>
+                </div>
+                 <div class="flex-item">
+                     <div class="form-group">
+                        <label for="limit">Number of rows to display: {{ limit }}</label>
+                        {# Input type range for slider #}
+                        <input type="range" id="limit" name="limit" min="5" max="100" value="{{ limit | default(10) }}">
+                     </div>
+                 </div>
+            </div>
+            <button type="submit" name="action" value="load_data" class="custom-btn">Load Table Data</button>
+        </form>
+
+        {% if dataframe %}
+            <div class="success-box" style="margin-top: 20px;">Loaded {{ dataframe | length }} rows from {{ current_table }}</div>
+
+            <h3 style="margin-top: 30px;">Data Preview</h3>
+            {# Render dataframe as HTML table #}
+            {{ dataframe_html | safe }}
+
+            <div class="flex-container" style="margin-top: 30px;">
+                <div class="flex-item">
+                     <h4>Table Structure</h4>
+                     {{ structure_html | safe }}
+                </div>
+                <div class="flex-item">
+                     <h4>Data Statistics</h4>
+                      {% if stats_html %}
+                        {{ stats_html | safe }}
+                     {% else %}
+                        <div class="info-box">No numeric columns for statistics</div>
+                     {% endif %}
+                </div>
+            </div>
+
+            <p style="margin-top: 20px;">
+                 <a href="{{ url_for('download_csv', filename=(current_table + '.csv')) }}" class="custom-btn">Download CSV File</a>
+            </p>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{# Add JS to update range input value display #}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const limitInput = document.getElementById('limit');
+        const limitLabel = limitInput.closest('.form-group').querySelector('label');
+
+        limitInput.addEventListener('input', function() {
+             limitLabel.textContent = `Number of rows to display: ${this.value}`;
+        });
+    });
+</script>
+{% endblock %}
