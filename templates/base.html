@@ -1,0 +1,148 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DataSense Analytics{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Include Plotly.js for rendering charts -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <div class="sidebar">
+        <img src="{{ url_for('static', filename='streamlit-mark-color.svg') }}" alt="Logo" width="100" style="display: block; margin: 0 auto;">
+        <h2>DataSense Analytics</h2>
+        <hr>
+        <ul>
+            <li><a href="{{ url_for('dashboard') }}" class="{% if active_nav == 'dashboard' %}active{% endif %}">Dashboard</a></li>
+            <li><a href="{{ url_for('explorer') }}" class="{% if active_nav == 'explorer' %}active{% endif %}">Database Explorer</a></li>
+            <li><a href="{{ url_for('sql_analytics') }}" class="{% if active_nav == 'sql_analytics' %}active{% endif %}">SQL Analytics</a></li>
+            <li><a href="{{ url_for('visualization') }}" class="{% if active_nav == 'visualization' %}active{% endif %}">Data Visualization</a></li>
+            <li><a href="{{ url_for('predictive_analytics') }}" class="{% if active_nav == 'predictive_analytics' %}active{% endif %}">AI Predictive Analytics</a></li>
+            <li><a href="{{ url_for('about') }}" class="{% if active_nav == 'about' %}active{% endif %}">About</a></li>
+        </ul>
+        <hr>
+        {% if db_status == 'connected' %}
+            <div class="success-box">✅ Database Connected</div>
+        {% else %}
+            <div style='background-color:#FECACA; padding:15px; border-radius:5px; border-left:5px solid #DC2626;'>❌ Database Disconnected</div>
+        {% endif %}
+         <hr>
+         {# Simplified system status #}
+         <h3>System Status</h3>
+         {# Placeholder for system status, psutil can be used in Flask route #}
+         <p>Memory Usage: ...</p>
+         <p>Database: {{ db_status | capitalize }}</p>
+         <p>Last Updated: {{ last_updated }}</p>
+    </div>
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        // Basic JS for tabs (optional, can also handle server-side)
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tabs button');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Deactivate all tabs and content
+                    tabs.forEach(t => t.classList.remove('active'));
+                    contents.forEach(c => c.classList.remove('active'));
+
+                    // Activate clicked tab and corresponding content
+                    const targetId = tab.dataset.target;
+                    tab.classList.add('active');
+                    document.getElementById(targetId).classList.add('active');
+                });
+            });
+
+            // Activate the first tab by default if none are active
+            if (tabs.length > 0 && !document.querySelector('.tabs button.active')) {
+                 tabs[0].click();
+            }
+        });
+
+        // Function to render Plotly chart from JSON
+        function renderPlotlyChart(chartJson, divId) {
+            if (chartJson) {
+                 try {
+                    const figure = JSON.parse(chartJson);
+                    Plotly.newPlot(divId, figure.data, figure.layout);
+                 } catch (e) {
+                    console.error("Error rendering Plotly chart:", e);
+                    document.getElementById(divId).innerHTML = "<p style='color: red;'>Error loading chart.</p>";
+                 }
+            }
+        }
+    </script>
+
+     {% block scripts %}{% endblock %} {# For page-specific JS like chart rendering #}
+</body>
+</html>
+```
+
+**4. `templates/dashboard.html`:**
+
+```html
+{% extends "base.html" %}
+
+{% block title %}Dashboard - DataSense Analytics{% endblock %}
+
+{% block content %}
+<h1 class="main-header">DataSense Analytics Dashboard</h1>
+
+<div class="subsection">
+    <div class="flex-container">
+        <div class="flex-item">
+            <h2>Welcome to DataSense Analytics Platform</h2>
+            <p>An advanced data analytics and visualization platform with SQL integration and AI-powered predictions.</p>
+            <p>Key features:</p>
+            <ul>
+                <li>📊 Interactive data visualizations</li>
+                <li>💻 Direct SQL queries to your database</li>
+                <li>🤖 AI predictive modeling</li>
+                <li>📈 Real-time analytics</li>
+                <li>🔄 Automated reporting</li>
+            </ul>
+        </div>
+        <div class="flex-item" style="text-align: center;">
+             <img src="{{ url_for('static', filename='streamlit-mark-color.svg') }}" alt="Logo" width="200">
+        </div>
+    </div>
+</div>
+
+<h2 class="section-header">Database Overview</h2>
+
+<div class="subsection">
+    <div class="metric-grid">
+        {% if stats %}
+            {% for key, value in stats.items() %}
+                <div class="metric-card">
+                    <h3>{{ key }}</h3>
+                    <h2>{{ value }}</h2>
+                </div>
+            {% endfor %}
+        {% else %}
+             <p>Could not retrieve database statistics.</p>
+        {% endif %}
+    </div>
+</div>
+
+<h2 class="section-header">Recent Activity</h2>
+
+<div class="subsection">
+     {# Placeholder for recent queries - in a real app, load this from DB/logs #}
+     <p>Recent activity tracking is not fully implemented in this Flask version.</p>
+     <table class="custom-table">
+        <tr><th>Query</th><th>Time</th><th>Status</th></tr>
+        <tr><td>SELECT * FROM advertisment LIMIT 10</td><td>10:30 AM</td><td style='color:green;'>Completed</td></tr>
+        <tr><td>SELECT COUNT(*) FROM customer_data</td><td>09:45 AM</td><td style='color:green;'>Completed</td></tr>
+        <tr><td>UPDATE products SET stock = 0 WHERE id = 203</td><td>Yesterday</td><td style='color:red;'>Failed</td></tr>
+     </table>
+</div>
+
+{% endblock %}
